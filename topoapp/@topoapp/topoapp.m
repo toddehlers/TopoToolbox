@@ -130,7 +130,7 @@ methods
             tic
             fprintf(1,'Initializing topoapp...');
             % create coordinate vectors
-            [this_app.X this_app.Y] =  getcoordinates(this_app.DEM);
+            [this_app.X, this_app.Y] =  getcoordinates(this_app.DEM);
             this_app.X = this_app.X(:)';
             this_app.Y = this_app.Y(:);
             % create slope map
