@@ -196,12 +196,16 @@ methods
         fprintf(1,'Initializing tools:\n');
         app.gui.TB = [];
         
+        filename = '';
+        
         if ismac
             fprintf('mac os\n');
-            [fid, errormsg] = fopen([pwd,'/@topoapp/topoapptools.txt']);
+            filename = [pwd,'/topoapp/@topoapp/topoapptools.txt'];
+            [fid, errormsg] = fopen(filename);
         else
             fprintf('not mac os\n');
-            [fid, errormsg] = fopen([pwd,'\topoapptools.txt']);
+            filename = [pwd,'\topoapp\@topoapp\topoapptools.txt'];
+            [fid, errormsg] = fopen(filename);
         end
         
         %sep = '\'; if ismac; sep = '/'; end
@@ -210,6 +214,7 @@ methods
         
         if fid == -1
             fprintf('could not open file: %s\n', errormsg);
+            fprintf('filename: %s\n', filename);
             fprintf('pwd: %s\n', pwd);
             return;
         end

@@ -3,7 +3,7 @@
 %
 
 % Adds the current folder and all subfolder to the search path
-addpath(genpath('.'))
+addpath(genpath('.'));
 
 % Run the main application
 app = topoapp();
