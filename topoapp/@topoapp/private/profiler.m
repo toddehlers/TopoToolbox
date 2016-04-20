@@ -11,8 +11,6 @@ if strcmp(eventdata,'init') % initialize tool
         'Separator','on',...
         'ClickedCallback',{@profiler,app});
 else
-    fprintf('Profiler is running...\n');
-
     % Design Matlab UI:
     % http://de.mathworks.com/help/matlab/ref/dialog.html
     % http://de.mathworks.com/help/matlab/ref/uicontrol.html
@@ -35,6 +33,8 @@ else
     text_input_height = 20;
 
     d = dialog('Position', [0 0 dialog_width dialog_height], 'Name', 'Set Profiler properties');
+
+    ui_data(1).dialog = d;
 
     % All labels:
 
@@ -71,36 +71,36 @@ else
 
     % All user input elements:
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (11 * label_height)) text_input_width text_input_height],...
+    ui_data(1).cell_size = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (11 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '28');
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (10 * label_height)) text_input_width text_input_height],...
+    ui_data(1).theta_ref = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (10 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '0.45');
 
-    uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (9 * label_height)) text_input_width text_input_height]);
+    ui_data(1).remove_spikes = uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (9 * label_height)) text_input_width text_input_height]);
 
-    uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (8 * label_height)) text_input_width text_input_height]);
+    ui_data(1).step_remover = uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (8 * label_height)) text_input_width text_input_height]);
 
-    uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (7 * label_height)) text_input_width text_input_height]);
+    ui_data(1).smooth_profile = uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (7 * label_height)) text_input_width text_input_height]);
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (6 * label_height)) text_input_width text_input_height],...
+    ui_data(1).smoothing_window = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (6 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '250');
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (5 * label_height)) text_input_width text_input_height],...
+    ui_data(1).contour_sampling = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (5 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '12.0');
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (4 * label_height)) text_input_width text_input_height],...
+    ui_data(1).auto_ksn = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (4 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '0.5');
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (3 * label_height)) text_input_width text_input_height],...
+    ui_data(1).search_distance = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (3 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '10');
 
-    uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (2 * label_height)) text_input_width text_input_height],...
+    ui_data(1).minimum_acc = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (2 * label_height)) text_input_width text_input_height],...
       'HorizontalAlignment', 'left', 'String', '10');
 
 
     uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) bottom_y_pos1 label_width label_height], 'String', 'Save parameters',...
-      'Callback', @save_parameters);
+      'Callback', {@save_parameters, ui_data});
 
 
     % Cell size (from DEM)
@@ -117,6 +117,84 @@ else
 end
 end
 
-function save_parameters(hObject,callbackdata)
+function save_parameters(hObject, callbackdata, user_data)
   fprintf('Save profiler parameters...\n');
+
+  % Check user input and mark error
+  has_error = false;
+
+  cell_size = str2double(user_data(1).cell_size.String);
+  if isnan(cell_size)
+    user_data(1).cell_size.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).cell_size.BackgroundColor = 'w';
+  end
+
+  theta_ref = str2double(user_data(1).theta_ref.String);
+  if isnan(theta_ref)
+    user_data(1).theta_ref.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).theta_ref.BackgroundColor = 'w';
+  end
+
+  smoothing_window = str2double(user_data(1).smoothing_window.String);
+  if isnan(smoothing_window)
+    user_data(1).smoothing_window.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).smoothing_window.BackgroundColor = 'w';
+  end
+
+  contour_sampling = str2double(user_data(1).contour_sampling.String);
+  if isnan(contour_sampling)
+    user_data(1).contour_sampling.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).contour_sampling.BackgroundColor = 'w';
+  end
+
+  auto_ksn = str2double(user_data(1).auto_ksn.String);
+  if isnan(auto_ksn)
+    user_data(1).auto_ksn.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).auto_ksn.BackgroundColor = 'w';
+  end
+
+  search_distance = str2double(user_data(1).search_distance.String);
+  if isnan(search_distance)
+    user_data(1).search_distance.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).search_distance.BackgroundColor = 'w';
+  end
+
+  minimum_acc = str2double(user_data(1).minimum_acc.String);
+  if isnan(minimum_acc)
+    user_data(1).minimum_acc.BackgroundColor = 'r';
+    has_error = true;
+  else
+    user_data(1).minimum_acc.BackgroundColor = 'w';
+  end
+
+
+  if has_error
+    fprintf('An error has occured! Please fix all the red input values\n');
+    return;
+  end
+
+  fprintf('cell_size: %f\n', cell_size);
+  fprintf('theta_ref: %f\n', theta_ref);
+  fprintf('smoothing_window: %f\n', smoothing_window);
+  fprintf('contour_sampling: %f\n', contour_sampling);
+  fprintf('auto_ksn: %f\n', auto_ksn);
+  fprintf('search_distance: %f\n', search_distance);
+  fprintf('minimum_acc: %f\n', minimum_acc);
+
+  fprintf('remove_spikes: %f\n', user_data(1).remove_spikes.Value);
+  fprintf('step_remover: %f\n', user_data(1).step_remover.Value);
+  fprintf('smooth_profile: %f\n', user_data(1).smooth_profile.Value);
+
 end
