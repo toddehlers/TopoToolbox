@@ -11,7 +11,7 @@ if strcmp(eventdata,'init') % initialize tool
         'Separator','on',...
         'ClickedCallback',{@profiler,app});
 
-    app.profiler_config = pwd;
+    app.profiler_config(1).file_name = pwd;
 else
     % Design Matlab UI:
     % http://de.mathworks.com/help/matlab/ref/dialog.html
@@ -45,6 +45,8 @@ else
     ui_arrays(1).text_label = {'Minimum Accumulation:', 'Search Distance:', 'Auto k_sn Window (km):', 'Contour Sampling Interval:', 'Smoothing Window:', ...
       'Smooth Profile ?', 'Step Remover ?', 'Remove Spikes ?', 'Theta Ref:', 'Cell size (from DEM):'};
 
+    ui_arrays(1).number_of_items = numel(ui_arrays(1).text_label);
+
     % Position indices:
     ui_arrays(1).text_input = [4 5 6 7 8 12 13];
     ui_arrays(1).check_box = [9 10 11];
@@ -52,7 +54,7 @@ else
     % Default values:
     ui_arrays(1).default_values = {'10', '10', '0.5', '12.0', '250', '0', '0', '0', '0.45', '30'};
 
-    for i = 1:numel(ui_arrays(1).text_label)
+    for i = 1:ui_arrays(1).number_of_items
       uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + ((i + 3) * label_height)) label_width label_height],...
         'HorizontalAlignment', 'right', 'String', ui_arrays(1).text_label{i});
     end
@@ -119,12 +121,12 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
     ui_data(i).value = ui_data(i).control.Value;
   end
 
-  for i = 1:numel(ui_arrays(1).text_label)
+  for i = 1:ui_arrays(1).number_of_items
     fprintf('%s: %f\n', ui_arrays(1).text_label{i}, ui_data(i + 3).value);
   end
 
-  [filename, pathname] = uinputfile('*', 'Select parameter file', app.profiler_config);
-  if isequal(filename,0)
+  [filename, pathname, filterIndex] = uiputfile('*', 'Select parameter file', app.profiler_config(1).file_name);
+  if isequal(filename, 0)
     fprintf('User selected cancel\n');
   else
     new_config_file = fullfile(pathname, filename);
@@ -135,10 +137,13 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
       fprintf('Could not open selected file "%s"\nThere was an error: %s\n', new_config_file, error_msg);
       errordlg('Error wile opening file', 'IO error');
     else
-      last_item = numel(ui_arrays(1).text_label) + 3;
-      fprintf(fileID, '%f %f %f %f %f %f %f %f %f %f\n', ui_data(last_item), ui_data(last_item - 1), ui_data(last_item - 2), ui_data(last_item - 3), ...
-          ui_data(last_item - 4), ui_data(last_item - 5), ui_data(last_item - 6), ui_data(last_item - 7), ui_data(last_item - 8), ui_data(last_item - 9));
+      last_item = ui_arrays(1).number_of_items + 3;
+      % fprintf(fileID, '%f %f', ui_data(last_item).value, ui_data(last_item - 1).value);
+       fprintf(fileID, '%f %f %f %f %f %f %f %f %f %f\n', ui_data(last_item).value, ui_data(last_item - 1).value, ui_data(last_item - 2).value, ...
+           ui_data(last_item - 3).value, ui_data(last_item - 4).value, ui_data(last_item - 5).value, ui_data(last_item - 6).value, ...
+           ui_data(last_item - 7).value, ui_data(last_item - 8).value, ui_data(last_item - 9).value);
       fclose(fileID);
+      app.profiler_config(1).file_name = new_config_file;
     end
   end
 end
@@ -146,8 +151,8 @@ end
 function load_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Load profiler parameters...\n');
 
-  [filename, pathname] = uigetfile('*', 'Select parameter file', app.profiler_config);
-  if isequal(filename,0)
+  [filename, pathname] = uigetfile('*', 'Select parameter file', app.profiler_config(1).file_name);
+  if isequal(filename, 0)
     fprintf('User selected cancel\n');
   else
     new_config_file = fullfile(pathname, filename);
@@ -160,7 +165,31 @@ function load_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
     else
       content = textscan(fileID, '%f %f %f %f %f %f %f %f %f %f');
       fclose(fileID);
-      disp(content)
+      % disp(content)
+
+      has_error = false;
+
+      for i = 1:ui_arrays(1).number_of_items
+        if isnan(content{i})
+          fprintf('item %d of file %s is invalid!\n', i, new_config_file);
+          has_error = true;
+        else
+          if strcmp(ui_data(i + 3).control.Style, 'edit')
+            ui_data(i + 3).control.String = num2str(content{ui_arrays(1).number_of_items - i + 1});
+          else
+            if content{ui_arrays(1).number_of_items - i + 1} ~= 0.0
+              ui_data(i + 3).control.Value = 1;
+            else
+              ui_data(i + 3).control.Value = 0;
+            end
+          end
+        end
+      end
+
+      if ~has_error
+        app.profiler_config(1).file_name = new_config_file;
+      end
+
     end
   end
 end
