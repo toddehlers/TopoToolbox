@@ -10,6 +10,8 @@ if strcmp(eventdata,'init') % initialize tool
         'TooltipString','Profiler',...
         'Separator','on',...
         'ClickedCallback',{@profiler,app});
+
+    app.profiler_config = pwd;
 else
     % Design Matlab UI:
     % http://de.mathworks.com/help/matlab/ref/dialog.html
@@ -56,6 +58,7 @@ else
     end
 
     % All user input elements:
+    % TODO: Fix tab order sequence, fix index of data values
 
     for i = ui_arrays(1).text_input
       ui_data(i).control = uicontrol('Parent', d, 'Style', 'edit', 'Position', [left_x_pos2 (bottom_y_pos2 + (i * label_height)) text_input_width text_input_height],...
@@ -67,13 +70,13 @@ else
     end
 
     uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) (bottom_y_pos1 + (2 * label_height)) label_width label_height], 'String', 'Load parameters',...
-      'Callback', {@load_parameters, ui_data, ui_arrays});
+      'Callback', {@load_parameters, ui_data, ui_arrays, app});
 
     uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) (bottom_y_pos1 + label_height) label_width label_height], 'String', 'Save parameters',...
-      'Callback', {@save_parameters, ui_data, ui_arrays});
+      'Callback', {@save_parameters, ui_data, ui_arrays, app});
 
     uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) bottom_y_pos1 label_width label_height], 'String', 'Run profiler',...
-      'Callback', {@run_profiler, ui_data, ui_arrays});
+      'Callback', {@run_profiler, ui_data, ui_arrays, app});
 
 
     % Cell size (from DEM)
@@ -90,7 +93,7 @@ else
 end
 end
 
-function save_parameters(hObject, callbackdata, ui_data, ui_arrays)
+function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Save profiler parameters...\n');
 
   % Check user input and mark error
@@ -119,12 +122,49 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays)
   for i = 1:numel(ui_arrays(1).text_label)
     fprintf('%s: %f\n', ui_arrays(1).text_label{i}, ui_data(i + 3).value);
   end
+
+  [filename, pathname] = uinputfile('*', 'Select parameter file', app.profiler_config);
+  if isequal(filename,0)
+    fprintf('User selected cancel\n');
+  else
+    new_config_file = fullfile(pathname, filename);
+    fprintf('User selected: %s\n', new_config_file);
+
+    [fileID, error_msg] = fopen(new_config_file, 'w');
+    if fileID < 0
+      fprintf('Could not open selected file "%s"\nThere was an error: %s\n', new_config_file, error_msg);
+      errordlg('Error wile opening file', 'IO error');
+    else
+      last_item = numel(ui_arrays(1).text_label) + 3;
+      fprintf(fileID, '%f %f %f %f %f %f %f %f %f %f\n', ui_data(last_item), ui_data(last_item - 1), ui_data(last_item - 2), ui_data(last_item - 3), ...
+          ui_data(last_item - 4), ui_data(last_item - 5), ui_data(last_item - 6), ui_data(last_item - 7), ui_data(last_item - 8), ui_data(last_item - 9));
+      fclose(fileID);
+    end
+  end
 end
 
-function load_parameters(hObject, callbackdata, ui_data, ui_arrays)
+function load_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Load profiler parameters...\n');
+
+  [filename, pathname] = uigetfile('*', 'Select parameter file', app.profiler_config);
+  if isequal(filename,0)
+    fprintf('User selected cancel\n');
+  else
+    new_config_file = fullfile(pathname, filename);
+    fprintf('User selected: %s\n', new_config_file);
+
+    [fileID, error_msg] = fopen(new_config_file, 'r');
+    if fileID < 0
+      fprintf('Could not open selected file "%s"\nThere was an error: %s\n', new_config_file, error_msg);
+      errordlg('Error wile opening file', 'IO error');
+    else
+      content = textscan(fileID, '%f %f %f %f %f %f %f %f %f %f');
+      fclose(fileID);
+      disp(content)
+    end
+  end
 end
 
-function run_profiler(hObject, callbackdata, ui_data, ui_arrays)
+function run_profiler(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Run profiler...\n');
 end

@@ -9,7 +9,7 @@ classdef topoapp < handle
 %
 % Description
 %
-%     TOPOAPP creates an instance of the topoapp class, which is a 
+%     TOPOAPP creates an instance of the topoapp class, which is a
 %     graphical user interface for working with digital elevation models.
 %     TOPOAPP acts as an interface for quick access to tools that are
 %     offered by the various TopoToolbox functions. It also provides a
@@ -25,25 +25,25 @@ classdef topoapp < handle
 %     created in a TOPOAPP session ('listfigure'), are also supplied and
 %     help to conform with the way TOPOAPP is handling the data when coding
 %     new tools. The best way to learn how to implement a new tool is by
-%     examining the currently available functions and tools. 
-%     
-%     
+%     examining the currently available functions and tools.
+%
+%
 %     APP = topoapp      creates a topoapp object by opening a dialog for
 %                        selecting a file that contains a DEM
 %
-%     APP = topoapp(DEM) creates a topoapp object from a DEM that must be 
+%     APP = topoapp(DEM) creates a topoapp object from a DEM that must be
 %                        an instance of class GRIDobj
 %
 %     APP = topoapp(APP) restores a topoapp object previously created
 %
-%     
-% 
+%
+%
 % TOPOAPP properties:
-%     
+%
 %     DEM       - digital elevation model (GRIDobj)
 %     X         - coordinate vector
 %     Y         - coordinate vectorA.path
-%     
+%
 %     G         - slope map (GRIDobj)
 %     RGB       - hillshade image colored by elevation (RGB)
 %     HS        - hillshade image (grayscale)
@@ -65,7 +65,7 @@ classdef topoapp < handle
 
 
 properties
-    
+
     DEM     % digital elevation model (GRIDobj)
     X       % coordinate vector
     Y       % coordinate vector
@@ -81,16 +81,17 @@ properties
     gui     % structure of gui-related handles
     objects % structure of object data
     paras   % structure of parameter data
-    
+    profiler_config % profiler configuration file
+
 end % properties
 
 
 methods
-    
+
     % App methods
     %----------------------------------------------------------------
     function this_app = topoapp(varargin)
-        
+
         % check input
         narginchk(0,1)
         if nargin==0
@@ -99,16 +100,16 @@ methods
         elseif nargin==1
             this_app.DEM = varargin{1};
         end
-        
+
         if isa(this_app.DEM,'topoapp')
             % restore instance of topoapp
             this_app = this_app.DEM;
             guilayout(this_app) % create graphical user interface
-            
+
             hold on
             h = plotobject(this_app,this_app.S,'k');
             set(h,'Displayname','Base STREAMobj','visible','off');
-            
+
             classes = this_app.objects.classes;
             for i = 1 : length(classes)
                 classname = classes{i};
@@ -123,7 +124,7 @@ methods
             end
             hold off
         else
-            
+
             % create new instance of topoapp
             validateattributes(this_app.DEM,{'GRIDobj'},{},'topoapp','DEM',1)
 
@@ -144,21 +145,21 @@ methods
             % create hillshade with sink depth image
             SINKDEPTH = fillsinks(this_app.DEM)-this_app.DEM;
             SINKDEPTH.Z(SINKDEPTH.Z==0) = nan;
-            this_app.SINKS   = imageschs(this_app.DEM,SINKDEPTH); 
+            this_app.SINKS   = imageschs(this_app.DEM,SINKDEPTH);
             this_app.objects.classes = '';
             fprintf(1,'done. ');
             toc
-            
+
             guilayout(this_app) % create graphical user interface
             this_app = defaultparas(this_app);
-            
-            
+
+
         end
-        
-    end % 
+
+    end %
     %----------------------------------------------------------------
     function guilayout(app)
-        
+
         tic
         fprintf(1,'Initializing gui...');
         % Create DEM window
@@ -167,18 +168,18 @@ methods
         app.gui.hfig = figure('Name','DEMfigure','OuterPosition',[1/4*scrsz(3) 1/3*scrsz(4) hgt*ratio  hgt]);
         app.gui.hax = imgca(app.gui.hfig);
         app.gui.himg = image(app.RGB,'parent',app.gui.hax,'Tag','DEM');
-        
+
         % Setup interactive zooming
         set(app.gui.hax,'ylimmode','auto','xlimmode','auto'); % reset after image detroyed
         app.gui.hzoom = zoom(app.gui.hax); % build zoom object
         zoom reset; % store current setting
-        
+
         % Create an instance of mscrollpanel and use API
         app.gui.hscroll = imscrollpanel(app.gui.hfig,app.gui.himg);
         api = iptgetapi(app.gui.hscroll);
         mag = api.findFitMag();
         api.setMagnification(mag); % set to initial magnification
-        
+
         % Magnification window
         app.gui.hmagbox = immagbox(app.gui.hfig,app.gui.himg);
         pos = get(app.gui.hmagbox,'Position');
@@ -186,18 +187,18 @@ methods
         imoverview(app.gui.himg)
         fprintf(1,'done. ');
         toc
-            
+
         % Setup toolbar
         app.gui.hTB = uitoolbar(app.gui.hfig);
-        
+
         % Initilize toolsA.path
-        
+
         tic
         fprintf(1,'Initializing tools:\n');
         app.gui.TB = [];
-        
+
         filename = '';
-        
+
         if ismac
             fprintf('mac os\n');
             filename = [pwd,'/topoapp/@topoapp/topoapptools.txt'];
@@ -207,18 +208,18 @@ methods
             filename = [pwd,'\topoapp\@topoapp\topoapptools.txt'];
             [fid, errormsg] = fopen(filename);
         end
-        
+
         %sep = '\'; if ismac; sep = '/'; end
         %A = what('@topoapp');
         %[fid, errormsg] = fopen([A.path,sep,'topoapptools.txt']);
-        
+
         if fid == -1
             fprintf('could not open file: %s\n', errormsg);
             fprintf('filename: %s\n', filename);
             fprintf('pwd: %s\n', pwd);
             return;
         end
-        
+
         C = textscan(fid,'%s'); fclose(fid);
         C = deblank(C{1});
         ct=1; addsep=0;
@@ -238,8 +239,8 @@ methods
             ct=ct+1;
         end
         toc
-        
-    end % 
+
+    end %
     %----------------------------------------------------------------
     function app = defaultparas(app)
         % flowrouting parameters
@@ -247,9 +248,8 @@ methods
         app.paras.flowset.shorties = 1e3; % maximum length of first order streams to remove [m]
     end
     %----------------------------------------------------------------
-    
-    
+
+
 end % methods
 
 end % classdef
-
