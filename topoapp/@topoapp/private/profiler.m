@@ -20,6 +20,12 @@ else
     % http://de.mathworks.com/help/matlab/ref/uicontrol-properties.html
     % http://de.mathworks.com/help/matlab/creating_guis/write-callbacks-using-the-programmatic-workflow.html#f16-1001315
 
+    if exists app.FA.Z == 0
+      fprintf('Please run flow accumulation first!\n');
+      errordlg('Please run flow accumulation first!', 'User input error');
+      return
+    end
+
     dialog_width = 260;
     dialog_height = 460;
 
@@ -53,7 +59,7 @@ else
     ui_arrays(1).check_box = [9 10 11];
 
     % Default values:
-    ui_arrays(1).default_values = {'10', '10', '0.5', '12.0', '250', '0', '0', '0', '0.45', '30'};
+    ui_arrays(1).default_values = {'10', '10', '0.5', '12.0', '250', '0', '0', '0', '0.45', num2str(app.DEM.cellsize)};
 
     for i = 1:ui_arrays(1).number_of_items
       uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + ((i + 3) * label_height)) label_width label_height],...
@@ -118,6 +124,10 @@ function has_error = check_parameters(ui_data, ui_arrays)
     return;
   end
 
+  for i = ui_arrays(1).check_box
+    ui_data(i).value = ui_data(i).control.Value;
+  end
+
   last_item = ui_arrays(1).number_of_items + 3;
 
   app.profiler_config(1).run_parameter(1) = ui_data(last_item).value;
@@ -129,7 +139,7 @@ function has_error = check_parameters(ui_data, ui_arrays)
   app.profiler_config(1).run_parameter(7) = ui_data(last_item - 6).value;
   app.profiler_config(1).run_parameter(8) = ui_data(last_item - 7).value;
   app.profiler_config(1).run_parameter(9) = ui_data(last_item - 8).value;
-  app.profiler_config(1).run_parameter(10) = ui_data(last_item - 9).value);
+  app.profiler_config(1).run_parameter(10) = ui_data(last_item - 9).value;
 end
 
 function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
@@ -139,10 +149,6 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
   has_error = check_parameters(ui_data, ui_arrays);
   if has_error
     return;
-  end
-
-  for i = ui_arrays(1).check_box
-    ui_data(i).value = ui_data(i).control.Value;
   end
 
   for i = 1:ui_arrays(1).number_of_items
