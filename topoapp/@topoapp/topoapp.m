@@ -97,6 +97,8 @@ methods
         if nargin==0
             [demfile,dempath] = uigetfile('.tif','Choose DEM file');
             this_app.DEM = GRIDobj([dempath,demfile]);
+            this_app.profiler_config(1).dem_path = dempath;
+            this_app.profiler_config(1).dem_file_name = demfile;
         elseif nargin==1
             this_app.DEM = varargin{1};
         end

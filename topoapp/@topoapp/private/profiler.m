@@ -11,7 +11,8 @@ if strcmp(eventdata,'init') % initialize tool
         'Separator','on',...
         'ClickedCallback',{@profiler,app});
 
-    app.profiler_config(1).file_name = pwd;
+    app.profiler_config(1).file_name = app.profiler_config(1).dem_path;
+    % app.profiler_config(1).file_name = pwd;
 else
     % Design Matlab UI:
     % http://de.mathworks.com/help/matlab/ref/dialog.html
@@ -95,7 +96,7 @@ else
 end
 end
 
-function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
+function has_error = check_parameters(ui_data, ui_arrays)
   fprintf('Save profiler parameters...\n');
 
   % Check user input and mark error
@@ -114,6 +115,29 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
   if has_error
     fprintf('An error has occured! Please fix all the red input values!\n');
     errordlg('Please fix all the red values!', 'Numeric input error');
+    return;
+  end
+
+  last_item = ui_arrays(1).number_of_items + 3;
+
+  app.profiler_config(1).run_parameter(1) = ui_data(last_item).value;
+  app.profiler_config(1).run_parameter(2) = ui_data(last_item - 1).value;
+  app.profiler_config(1).run_parameter(3) = ui_data(last_item - 2).value;
+  app.profiler_config(1).run_parameter(4) = ui_data(last_item - 3).value;
+  app.profiler_config(1).run_parameter(5) = ui_data(last_item - 4).value;
+  app.profiler_config(1).run_parameter(6) = ui_data(last_item - 5).value;
+  app.profiler_config(1).run_parameter(7) = ui_data(last_item - 6).value;
+  app.profiler_config(1).run_parameter(8) = ui_data(last_item - 7).value;
+  app.profiler_config(1).run_parameter(9) = ui_data(last_item - 8).value;
+  app.profiler_config(1).run_parameter(10) = ui_data(last_item - 9).value);
+end
+
+function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
+  fprintf('Save profiler parameters...\n');
+
+  % Check user input and mark error
+  has_error = check_parameters(ui_data, ui_arrays);
+  if has_error
     return;
   end
 
@@ -139,9 +163,17 @@ function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
     else
       last_item = ui_arrays(1).number_of_items + 3;
       % fprintf(fileID, '%f %f', ui_data(last_item).value, ui_data(last_item - 1).value);
-       fprintf(fileID, '%f %f %f %f %f %f %f %f %f %f\n', ui_data(last_item).value, ui_data(last_item - 1).value, ui_data(last_item - 2).value, ...
-           ui_data(last_item - 3).value, ui_data(last_item - 4).value, ui_data(last_item - 5).value, ui_data(last_item - 6).value, ...
-           ui_data(last_item - 7).value, ui_data(last_item - 8).value, ui_data(last_item - 9).value);
+      v1 = app.profiler_config(1).run_parameter(1);
+      v2 = app.profiler_config(1).run_parameter(2);
+      v3 = app.profiler_config(1).run_parameter(3);
+      v4 = app.profiler_config(1).run_parameter(4);
+      v5 = app.profiler_config(1).run_parameter(5);
+      v6 = app.profiler_config(1).run_parameter(6);
+      v7 = app.profiler_config(1).run_parameter(7);
+      v8 = app.profiler_config(1).run_parameter(8);
+      v9 = app.profiler_config(1).run_parameter(9);
+      v10 = app.profiler_config(1).run_parameter(10);
+      fprintf(fileID, '%f %f %f %f %f %f %f %f %f %f\n', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10);
       fclose(fileID);
       app.profiler_config(1).file_name = new_config_file;
     end
@@ -196,4 +228,19 @@ end
 
 function run_profiler(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Run profiler...\n');
+
+  % Check user input and mark error
+  has_error = check_parameters(ui_data, ui_arrays);
+  if has_error
+    return;
+  end
+
+  d = ui_data(1).control;
+
+  if ishandle(d)
+    delete(d);
+  end
+
+  profile51(app);
+
 end
