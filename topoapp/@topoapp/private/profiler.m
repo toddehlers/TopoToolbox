@@ -233,7 +233,7 @@ function load_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
 end
 
 function run_profiler(hObject, callbackdata, ui_data, ui_arrays, app)
-  fprintf('Run profiler...\n');
+  fprintf('Run profiler51...\n');
 
   % Check user input and mark error
   has_error = check_parameters(ui_data, ui_arrays);
@@ -248,5 +248,4 @@ function run_profiler(hObject, callbackdata, ui_data, ui_arrays, app)
   end
 
   profile51(app);
-
 end
