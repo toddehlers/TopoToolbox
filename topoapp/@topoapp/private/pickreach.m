@@ -1,27 +1,29 @@
 function app = pickreach(hObject,eventdata,app)
 % PICKREACH allows interactive extraction of a reach within topoapp
 %
-% See also: topoapp/initclass, topoapp/addobject, 
+% See also: topoapp/initclass, topoapp/addobject,
 % STREAMobj/STREAMobj2GRIDobj, REACHobj
 %
 % Author: Dirk Scherler (scherler[at]caltech.edu)
 % Date: June, 2013
 
 if strcmp(eventdata,'init') % initialize tool
-    
+
     % Load button icons
     reachicon = imread('reachicon.png','png');
-    
+
     % Set up toolbar button
     app.gui.TB(end+1) = uipushtool('Parent',app.gui.hTB,...
         'Cdata',reachicon,'TooltipString','Pick channel reach',...
         'ClickedCallback',{@pickreach,app});
-    
+
     % add class to topoapp
     app = initclass(app,'REACHobj','g');
-    
+
 else % execute tool
-    
+
+    fprintf('pick reach!\n');
+
     if isempty(app.S)
         warning('No STREAMobj found. Use FLOW routing button first')
     else
@@ -29,6 +31,13 @@ else % execute tool
         set(app.gui.TB,'Enable','off');
         W = STREAMobj2GRIDobj(app.S);
         [x,y] = ginput(1); % Let user pick first point
+
+        app.profiler_config(1).reach_x(end + 1) = x;
+        app.profiler_config(1).reach_y(end + 1) = y;
+        [cx, cy] = sub2coord(app.DEM, x, y);
+        app.profiler_config(1).reach_cx(end + 1) = cx;
+        app.profiler_config(1).reach_cy(end + 1) = cy;
+
         ix1 = sub2ind(app.FD.size,round(y(1)),round(x(1)));
         hold on; ht(1) = plot(x,y,'ro'); hold off
         [x,y] = ginput(1); % Let user pick second point
@@ -51,7 +60,7 @@ else % execute tool
         title(app.objects.(class(R)).names{end})
         set(app.gui.TB,'Enable','on');
     end
-    
+
 end
 
 end %

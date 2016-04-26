@@ -12,6 +12,10 @@ if strcmp(eventdata,'init') % initialize tool
         'ClickedCallback',{@profiler,app});
 
     app.profiler_config(1).file_name = app.profiler_config(1).dem_path;
+    app.profiler_config(1).reach_x = [];
+    app.profiler_config(1).reach_y = [];
+    app.profiler_config(1).reach_cx = [];
+    app.profiler_config(1).reach_cy = [];
     % app.profiler_config(1).file_name = pwd;
 else
     % Design Matlab UI:
@@ -20,9 +24,15 @@ else
     % http://de.mathworks.com/help/matlab/ref/uicontrol-properties.html
     % http://de.mathworks.com/help/matlab/creating_guis/write-callbacks-using-the-programmatic-workflow.html#f16-1001315
 
-    if exists app.FA.Z == 0
+    if isempty(isprop(app.FA, 'Z'))
       fprintf('Please run flow accumulation first!\n');
       errordlg('Please run flow accumulation first!', 'User input error');
+      return
+    end
+
+    if isempty(app.objects.REACHobj.data)
+      fprintf('Please select channel reach first!\n');
+      errordlg('Please select channel reach first!', 'User input error');
       return
     end
 
@@ -102,7 +112,7 @@ else
 end
 end
 
-function has_error = check_parameters(ui_data, ui_arrays)
+function has_error = check_parameters(ui_data, ui_arrays, app)
   fprintf('Save profiler parameters...\n');
 
   % Check user input and mark error
@@ -236,7 +246,7 @@ function run_profiler(hObject, callbackdata, ui_data, ui_arrays, app)
   fprintf('Run profiler51...\n');
 
   % Check user input and mark error
-  has_error = check_parameters(ui_data, ui_arrays);
+  has_error = check_parameters(ui_data, ui_arrays, app);
   if has_error
     return;
   end
