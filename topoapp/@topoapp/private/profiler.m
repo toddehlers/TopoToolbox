@@ -24,6 +24,11 @@ else
     % http://de.mathworks.com/help/matlab/ref/uicontrol-properties.html
     % http://de.mathworks.com/help/matlab/creating_guis/write-callbacks-using-the-programmatic-workflow.html#f16-1001315
 
+
+    % TODO: pick point of interest in profiler instead of other tool
+    % TODO: read in DEM ADCII files
+    % TODO: color the rivers, same color for same channel steepness
+
     if isempty(isprop(app.FA, 'Z'))
       fprintf('Please run flow accumulation first!\n');
       errordlg('Please run flow accumulation first!', 'User input error');

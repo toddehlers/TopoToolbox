@@ -1,11 +1,11 @@
 function [slp,range,ukn1,stats,movernset,ukn,uknhigh,uknlow,min_area,max_area,h2,h3,h4,h7,h8,h9,h10,h11,h12,h13,h14,h15,h16,h17,h18,h19,h20,chandata] = sa_regress51(chandata,ida,islope,lbarea,lbslope,idfd,idfm,ielev,ichi,movernset,name,arc_workdir,mat_workdir,rmspike,wind,cont_intv,ks_window)
 
-% sa_regress51.m performs the primary regression(s) of slope-area data 
-% based on the channel parameters.  It is written to work with data from 
-% profile51.m and associated functions, movavg51.m, sa_analysis51.m.  
+% sa_regress51.m performs the primary regression(s) of slope-area data
+% based on the channel parameters.  It is written to work with data from
+% profile51.m and associated functions, movavg51.m, sa_analysis51.m.
 % It takes a minimum and maximum drainage area to regress slope-area data.
 
-% USAGE: 
+% USAGE:
 %     [slp,range,ukn1,stats,movernset,ukn,uknhigh,uknlow,min_area,max_area,
 %     h2,h3,h4,h7,h8,h9,h10,h11,h12,h13,h14,h15,h16,h17,h18,h19,h20,chandata] = sa_regress51(chandata,ida,islope,lbarea,lbslope,idfd,idfm,ielev,ichi,movernset,name,arc_workdir,mat_workdir,rmspike,wind,cont_intv,ks_window)
 %
@@ -18,8 +18,8 @@ function [slp,range,ukn1,stats,movernset,ukn,uknhigh,uknlow,min_area,max_area,h2
 %    MIN_AREA, MAX_AREA, minimum and maximum drainage area for regression
 %    h#, handles for ArcGIS rendering
 %    CHANDATA, primary array of channel data
-% 
-% INPUT 
+%
+% INPUT
 %    DFD, vector of distance from divide
 %    PELEV, elevation array
 %    SMOOTH_PELEV, smoothed elevation array
@@ -51,7 +51,7 @@ pelev = chandata(:,2);
 drainarea = chandata(:,3);
 smooth_pelev = chandata(:,4);
 
-disp('From which plot would you like to pick regression limits? (or enter "d" for manual input)') 
+disp('From which plot would you like to pick regression limits? (or enter "d" for manual input)')
 regress_opt = input('a) logS-logA (fig2 plot3); b) long profile (fig2 plot1); c) dist-log(gradient) (fig3 plot2):  ','s');
 
 while ~strcmp(regress_opt,'a') & ~strcmp(regress_opt,'b') & ~strcmp(regress_opt,'c') & ~strcmp(regress_opt,'d'),
@@ -77,7 +77,7 @@ if regress_opt == 'a'
     max_area = area(2,1);
 end
 
-% OPTION 2: pick regression limits off Long Profile.  NOTE: also saves targi, targj 
+% OPTION 2: pick regression limits off Long Profile.  NOTE: also saves targi, targj
 if regress_opt == 'b'
     disp('Click on LEFT (max dfm) then RIGHT (min dfm) bounds for regression from STREAM PROFILE (fig2, plot 1)')
     disp('Regress bounds must include at least 3 data points -- crosses on LOG(S)-LOG(A) PLOT')
@@ -95,13 +95,13 @@ if regress_opt == 'b'
     dfm=chandata(:,7);
     mindistfm = abs(dfm-distfm(1,1));      % find closest point in chandata matrix
     maxdistfm = abs(dfm-distfm(2,1));
-    
+
     [xx1,minflag] = min(mindistfm);
     [xx2,maxflag] = min(maxdistfm);
-    
+
     min_area = chandata(minflag,3);
     max_area = chandata(maxflag,3);
-    
+
     % Save coordinates of regression limits in x,y space.  Might be useful to
     % be able to export these to the ArcGIS project to see where things are.
     min_mapx = (chandata(minflag,6));
@@ -127,19 +127,19 @@ if regress_opt == 'c'
     dfm=chandata(:,7);
     mindistfm = abs(dfm-distfm(1,1));      % find closest point in chandata matrix
     maxdistfm = abs(dfm-distfm(2,1));
-    
+
     [xx1,minflag] = min(mindistfm);
     [xx2,maxflag] = min(maxdistfm);
-    
+
     min_area = chandata(minflag,3);
     max_area = chandata(maxflag,3);
-    
+
     % Save coordinates of regression limits in x,y space.  Might be useful to
     % be able to export these to the ArcGIS project to see where things are.
     min_mapx = (chandata(minflag,6));
     min_mapy = (chandata(minflag,5));
     max_mapx = (chandata(maxflag,6));
-    max_mapy = (chandata(maxflag,5));   
+    max_mapy = (chandata(maxflag,5));
 end
 
 % OPTION 4: Type in regression limits manually (the old fashioned way)
@@ -183,7 +183,7 @@ schi = ichi(ind);
 if max(size(selev)) <= 2
     disp('ERROR: Fewer than 2 contour crossings in regression: uncertainty undefined')
     disp('ERROR: Will not import into arcgis -- select new regression bounds')
-end 
+end
 % Take the log of slope and area, set up a two-column area matrix.
 logsarea=log(sarea');
 logsslope=log(sslope');
@@ -213,7 +213,7 @@ movernvect = [slp range -1*range];
 
 	% Calculate the least-squares linear fit and 95% confidence intervals.
 		[bc,bintc,rc,rintc,statsc] = regress(selev',chimatrix,0.05);
-        
+
 	% Calculate ks, the slope of the best-fit line.
         zo_c = bc(1);
         ks_chi = bc(2);
@@ -228,10 +228,10 @@ movernvect = [slp range -1*range];
 		range_chi = (bintc(2)-bintc(4))/(-2);
         uknlow = bintc(2);
         uknhigh = bintc(4);
-        
+
     % Calculate the fit segment for later plotting
         calc_elev = ks_chi.*schi + zo_c;
-       
+
 	% calculate errors on residuals and plot
         figure(4);
 		r_err = rc - rintc(:,1);
@@ -268,11 +268,19 @@ if yloc2 > 0.4,
     yloc1=exp(b(2).*log(xloc) + b(1) - 1.2);
     yloc2=exp(b(2).*log(xloc) + b(1) - 2);
 end
-h13=text(xloc,yloc2,['\theta=',num2str(slp,2),' \pm ',num2str(range,2)],'fontsize',10,'horizontalalignment','center');
-h14=text(xloc,yloc1,['k_s_n=',num2str(ukn,3)],'fontsize',10,'horizontalalignment','center');
+
+label1 = ['\theta=',num2str(slp,2),' \pm ',num2str(range,2)];
+label2 = ['k_s_n=',num2str(ukn,3)];
+
+xloc = double(xloc);
+yloc1 = double(yloc1);
+yloc2 = double(yloc2);
+
+h13 = text(xloc, yloc2, label1, 'fontsize',10,'horizontalalignment','center');
+h14 = text(xloc, yloc1, label2, 'fontsize',10,'horizontalalignment','center');
 
 disp('Click the upper left corner to locate temporary parameter text.')
-h3=gtext({['\theta=',num2str(slp,2),' \pm ',num2str(range,2)],['k_s= ',num2str(ukn1,3)],['R^2: ',num2str(stats(1),2)],['\theta_r_e_f=',num2str(-1*movernset),' k_s_n=',num2str(ukn,3),' (',num2str(uknlow,3),'-',num2str(uknhigh,3),')'],['Fit betw ',num2str(min_area,2)],['   and ',num2str(max_area,2)]},'fontsize',10);
+h3 = gtext({['\theta=',num2str(slp,2),' \pm ',num2str(range,2)],['k_s= ',num2str(ukn1,3)],['R^2: ',num2str(stats(1),2)],['\theta_r_e_f=',num2str(-1*movernset),' k_s_n=',num2str(ukn,3),' (',num2str(uknlow,3),'-',num2str(uknhigh,3),')'],['Fit betw ',num2str(min_area,2)],['   and ',num2str(max_area,2)]},'fontsize',10);
 
 % Compute the steady-state profile, based on derived ukn, and m/n (b(2)).
 % Slope (Se) and elevation (zss):
@@ -290,7 +298,7 @@ fSe = ukn*sarea.^movernset;
 zfss(1) = ielev(i,j);
 for a = 2:length(sarea)
     zfss(a) = fSe(a-1).*(sdfd(a-1)-sdfd(a))+zfss(a-1);
-end        
+end
 
 % Plot the steady-state and forced profiles in blue and green.
 % convert dfd to km
@@ -320,11 +328,11 @@ if variable_color,
     h4=semilogy(sdfm,fSe,'--','color',color2);
     h17=0;
     h18=0;
-else 
+else
     h2=semilogy([sdfm(1) sdfm(length(sdfm))],[Se(1) Se(length(Se))],'b.');
     h4=semilogy([sdfm(1) sdfm(length(sdfm))],[fSe(1) Se(length(fSe))],'c.');
     h17=semilogy(sdfm,Se,'b-');
-    h18=semilogy(sdfm,fSe,'c-');    
+    h18=semilogy(sdfm,fSe,'c-');
 end
 figure (2)
 hold on
@@ -338,11 +346,11 @@ else
     h12=plot([sdfm(1) sdfm(length(sdfm))],[zss(1) zss(length(zss))],'b.');
     h7=plot([sdfm(1) sdfm(length(sdfm))],[zfss(1) zfss(length(zfss))],'c.');
     h20=plot(sdfm,zss,'b-');
-    h19=plot(sdfm,zfss,'c-');    
+    h19=plot(sdfm,zfss,'c-');
 end
 
 %**************************************************************************
-% Routine to plot ks vs dfm along the profile.  User provides a moving window 
+% Routine to plot ks vs dfm along the profile.  User provides a moving window
 % length; steepness indices are calculated for midpoints of these windows along
 % the profile.  Figure 3 subplot (3,1,3) plots ks vs distance from mouth.
 % NOTE TO USER: If moving window is too small, it is possible that there
@@ -384,7 +392,7 @@ for x = 0:help
     midptsy(x+1,1) = chandata(bb,5);
     min_ar = chandata(vv,3);
     max_ar = chandata(yy,3);
-    
+
     % Select range of drainage area to fit, calc ks_n only for non-zero elements
     ind = find(ida>min_ar & ida<max_ar);
     k = size(nonzeros(ind));
@@ -397,7 +405,7 @@ for x = 0:help
     logsarea=log(sarea');
     logsslope=log(sslope');
     areamatrix=[ones(size(logsslope)) logsarea];
-    
+
     % Calculate steepness for each interval [(U/k)^(1/n)], based on
     % movernset.  Save value in matrix along with distance from divide.
     logsareamean = mean(logsarea);
@@ -409,7 +417,7 @@ for x = 0:help
     newks(x+1,1) = uknstream;
     end
 
-end  
+end
 %
 % Extract non-zero elements for plotting
 %
@@ -433,7 +441,3 @@ end
 %********************************************************************
 % END of ks vs DFD plotting subroutine
 %********************************************************************
-
-
-
-
