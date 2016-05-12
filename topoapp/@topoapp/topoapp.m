@@ -95,7 +95,7 @@ methods
         % check input
         narginchk(0,1)
         if nargin==0
-            [demfile,dempath] = uigetfile('.tif','Choose DEM file');
+            [demfile,dempath] = uigetfile({'*.tif'; '*.txt'; '*.dem'; '*.dat'; '*.asc'},'Choose DEM file');
             this_app.DEM = GRIDobj([dempath,demfile]);
             this_app.profiler_config(1).dem_path = dempath;
             this_app.profiler_config(1).dem_file_name = demfile;
