@@ -35,11 +35,25 @@ else
       return
     end
 
-    if isempty(app.objects.REACHobj.data)
-      fprintf('Please select channel reach first!\n');
-      errordlg('Please select channel reach first!', 'User input error');
-      return
-    end
+    % if isempty(app.objects.REACHobj.data)
+    %  fprintf('Please select channel reach first!\n');
+    %  errordlg('Please select channel reach first!', 'User input error');
+    %  return
+    % end
+
+
+    fprintf('Please select channel of interest\n');
+    set(app.gui.TB,'Enable','off'); % disable toolbar
+    W = STREAMobj2GRIDobj(app.S);
+    [x,y] = ginput(1); % Let user pick point
+    app.profiler_config(1).reach_x(end + 1) = x;
+    app.profiler_config(1).reach_y(end + 1) = y;
+    [cx, cy] = sub2coord(app.DEM, x, y);
+    app.profiler_config(1).reach_cx(end + 1) = cx;
+    app.profiler_config(1).reach_cy(end + 1) = cy;
+    fprintf('x: %d, y: %d, cx: %d, cy: %d\n', x, y, cx, cy);
+    set(app.gui.TB,'Enable','on'); % enable toolbar
+
 
     dialog_width = 260;
     dialog_height = 460;

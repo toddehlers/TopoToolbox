@@ -32,12 +32,6 @@ else % execute tool
         W = STREAMobj2GRIDobj(app.S);
         [x,y] = ginput(1); % Let user pick first point
 
-        app.profiler_config(1).reach_x(end + 1) = x;
-        app.profiler_config(1).reach_y(end + 1) = y;
-        [cx, cy] = sub2coord(app.DEM, x, y);
-        app.profiler_config(1).reach_cx(end + 1) = cx;
-        app.profiler_config(1).reach_cy(end + 1) = cy;
-
         ix1 = sub2ind(app.FD.size,round(y(1)),round(x(1)));
         hold on; ht(1) = plot(x,y,'ro'); hold off
         [x,y] = ginput(1); % Let user pick second point
