@@ -27,8 +27,8 @@ else
 
     % DONE: pick point of interest in profiler instead of other tool
     % DONE: read in DEM ADCII files
-    % TODO: color the rivers, same color for same channel steepness
-    % TODO: Let user select output folder
+    % (TODO: color the rivers, same color for same channel steepness)
+    % DONE: Let user select output folder
     % TODO: Write ArcGIS shape file
     % TODO: Write chi value in channel file (column 11)
 
@@ -59,7 +59,7 @@ else
 
 
     dialog_width = 260;
-    dialog_height = 460;
+    dialog_height = 550;
 
     label_width = 150;
     label_height = 30;
@@ -67,8 +67,8 @@ else
     left_x_pos1 = 10;
     left_x_pos2 = left_x_pos1 + label_width + 10;
 
-    bottom_y_pos1 = 10;
-    bottom_y_pos2 = 22;
+    bottom_y_pos1 = 10; % Start position of push buttons
+    bottom_y_pos2 = 112; % Start position of edit GUI elements
 
     text_input_width = 50;
     text_input_height = 20;
@@ -94,7 +94,7 @@ else
     ui_arrays(1).default_values = {'10', '10', '0.5', '12.0', '250', '0', '0', '0', '0.45', num2str(app.DEM.cellsize)};
 
     for i = 1:ui_arrays(1).number_of_items
-      uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + ((i + 3) * label_height)) label_width label_height],...
+      uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + ((i + 6) * label_height)) label_width label_height],...
         'HorizontalAlignment', 'right', 'String', ui_arrays(1).text_label{i});
     end
 
@@ -109,6 +109,16 @@ else
     for i = ui_arrays(1).check_box
       ui_data(i).control = uicontrol('Parent', d, 'Style', 'checkbox', 'Position', [left_x_pos2 (bottom_y_pos2 + (i * label_height)) text_input_width text_input_height]);
     end
+
+
+    uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + (5 * label_height)) label_width label_height],...
+      'HorizontalAlignment', 'left', 'String', 'Output folder:');
+
+    ui_arrays(1).output_folder_path = uicontrol('Parent', d, 'Style', 'text', 'Position', [left_x_pos1 (bottom_y_pos1 + (4 * label_height)) (dialog_width - (left_x_pos1 * 2)) label_height],...
+      'HorizontalAlignment', 'left', 'String', app.profiler_config(1).dem_path);
+
+    uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) (bottom_y_pos1 + (3 * label_height)) label_width label_height], 'String', 'Set output folder',...
+      'Callback', {@output_folder, ui_data, ui_arrays, app});
 
     uicontrol('Parent', d, 'Position', [((dialog_width - label_width) / 2) (bottom_y_pos1 + (2 * label_height)) label_width label_height], 'String', 'Load parameters',...
       'Callback', {@load_parameters, ui_data, ui_arrays, app});
@@ -172,6 +182,18 @@ function has_error = check_parameters(ui_data, ui_arrays, app)
   app.profiler_config(1).run_parameter(8) = ui_data(last_item - 7).value;
   app.profiler_config(1).run_parameter(9) = ui_data(last_item - 8).value;
   app.profiler_config(1).run_parameter(10) = ui_data(last_item - 9).value;
+end
+
+function output_folder(hObject, callbackdata, ui_data, ui_arrays, app)
+  fprintf('Select ouput folder...\n');
+  dirpath = uigetdir(app.profiler_config(1).dem_path, 'Select output folder');
+  if isequal(dirpath, 0)
+    fprintf('User selected cancel\n');
+  else
+    fprintf('User selected: "%s\n"', dirpath);
+    app.profiler_config(1).dem_path = dirpath;
+    ui_arrays(1).output_folder_path.String = dirpath;
+  end
 end
 
 function save_parameters(hObject, callbackdata, ui_data, ui_arrays, app)
