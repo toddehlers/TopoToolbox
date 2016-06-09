@@ -1,4 +1,4 @@
-function [ida,islope,lbarea,lbslope,chandata, ans2] = sa_analysis51(chandata,movernset,name,arc_workdir,mat_workdir,rmspike,wind,no_step,ks_window,cont_intv)
+function [ida,islope,lbarea,lbslope,chandata,ans2] = sa_analysis51(chandata,movernset,name,arc_workdir,mat_workdir,rmspike,wind,no_step,ks_window,cont_intv)
 
 % sa_analysis51.m contains most of the analysis of slope/area data
 % extracted from the profile.  It calculates channel gradient on fixed
@@ -199,11 +199,11 @@ lbslope = tempslope(find(tempslope));
 %
 % Begin ichi Calculation - for the Integral Method
 %
-istop = length(idfm);
 
+istop = length(idfm);
 ichi(1)=0;
 for i = 2:istop
-ichi(i)=ichi(i-1)+((ida(i).^(movernset)+ida(i-1).^(movernset))./2).*(idfm(i)-idfm(i-1));
+  ichi(i) = ichi(i-1) + ((ida(i).^(movernset) + ida(i-1).^(movernset)) ./ 2) .* (idfm(i) - idfm(i-1));
 end
 
 ichi = ichi';			%transpose matrix
