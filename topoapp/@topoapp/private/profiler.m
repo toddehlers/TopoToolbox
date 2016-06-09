@@ -25,12 +25,12 @@ else
     % http://de.mathworks.com/help/matlab/creating_guis/write-callbacks-using-the-programmatic-workflow.html#f16-1001315
 
 
-    % DONE: pick point of interest in profiler instead of other tool
-    % DONE: read in DEM ADCII files
+    % DONE: Pick point of interest in profiler instead of other tool
+    % DONE: read in DEM ASCII files
     % (TODO: color the rivers, same color for same channel steepness)
     % DONE: Let user select output folder
-    % TODO: Write ArcGIS shape file
-    % TODO: Write chi value in channel file (column 11)
+    % DONE: Write ArcGIS shape file
+    % DONE: Write chi value in channel file (column 7)
 
     if isempty(isprop(app.FA, 'Z'))
       fprintf('Please run flow accumulation first!\n');
