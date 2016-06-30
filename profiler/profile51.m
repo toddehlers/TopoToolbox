@@ -428,14 +428,16 @@ while answer1,
     % auto_ks_vals: steepness information, inside chandata[:, 8]
     % x = chandata[:, 9], y = chandata[:, 10]
 
-    s(1:length(auto_ks_vals)) = struct('ksn', 0.0, 'chi', 0.0);
+    s(1:length(auto_ks_vals)) = struct('ksn', 0.0, 'chi', 0.0, 'Geometry', 'Point', 'X', 0.0, 'Y', 0.0);
 
     for i = 1:length(auto_ks_vals)
-      s(i).ksn = auto_ks_vals(i);
+      s(i).ksn = double(chandata(i, 8));
       s(i).chi = chi(i);
+      s(i).X = double(p_x(i));
+      s(i).Y = double(p_y(i));
     end
 
-    shapewrite(mapshape(x_coord, y_coord, s), [arc_workdir, name, 'auto_ks_vals.shp']);
+    shapewrite(s, [arc_workdir, name, '_auto_ks_vals.shp']);
 
     % WK: 2016.06.30, append chi values to end of chandata matrix
     chandata = [chandata chi'];
