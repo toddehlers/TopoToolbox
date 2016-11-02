@@ -17,7 +17,7 @@ function OUT = chiplot(S,DEM,A,varargin)
 %
 % Input arguments
 %
-%     S     instance of STREAMobj. The stream network must consist of only 
+%     S     instance of STREAMobj. The stream network must consist of only
 %           one connected component (only one outlet may exist!)
 %     DEM   digital elevation model (GRIDobj)
 %     A     flow accumulation as calculated by flowacc (GRIDobj)
@@ -27,17 +27,17 @@ function OUT = chiplot(S,DEM,A,varargin)
 %     'a0': {1e6}
 %     reference area in m^2
 %
-%     'mn':  {[]}, scalar      
+%     'mn':  {[]}, scalar
 %     mn is the ratio of m and n in the stream power equation. The value
 %     ranges usually for bedrock rivers between 0.1 and 0.5. If empty, it
 %     is automatically found by a least squares approach.
-%     
+%
 %     'trunkstream': {[]}, STREAMobj
 %     instance of STREAMobj that must be a subset of S, e.g. the main river
 %     in the network S. The main trunk is highlighted in the plot and can
 %     be used to fit the mn ratio (see pn/pv pair 'fitto').
 %
-%     'fitto': {'all'},'ts', 
+%     'fitto': {'all'},'ts',
 %     choose which data should be used for fitting the mn ratio.
 %     'all' fits mn to all streams in S
 %     'ts' fits mn only to the trunkstream which must be provided with the
@@ -57,7 +57,7 @@ function OUT = chiplot(S,DEM,A,varargin)
 %     .betase   standard error of beta
 %     .a0       reference area
 %     .ks       channel steepness index
-%     .chi      CHI values 
+%     .chi      CHI values
 %     .elev     elevation
 %     .elevbl   elevation above baselevel
 %     .distance distance from outlet
@@ -70,22 +70,22 @@ function OUT = chiplot(S,DEM,A,varargin)
 %
 %
 % See also: flowpathapp, STREAMobj, FLOWobj/flowacc, STREAMobj/trunk,
-%           STREAMobj/modify  
+%           STREAMobj/modify
 %
 %
 % References:
-%     
-%     Perron, J. & Royden, L. (2013): An integral approach to bedrock river 
+%
+%     Perron, J. & Royden, L. (2013): An integral approach to bedrock river
 %     profile analysis. Earth Surface Processes and Landforms, 38, 570-576.
 %     [DOI: 10.1002/esp.3302]
-%     
+%
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
 % Date: 13. May, 2013
 
 
 % Parse Inputs
-p = InputParser;         
+p = InputParser;
 p.FunctionName = 'chiplot';
 addRequired(p,'S',@(x) isa(x,'STREAMobj'));
 addRequired(p,'DEM', @(x) isa(x,'GRIDobj'));
@@ -110,7 +110,7 @@ mnmethod   = validatestring(p.Results.mnmethod,{'ls','lad'});
 
 % to which stream should the data be fitted? Trunkstream or all streams?
 if ischar(fitto)
-    fitto = validatestring(fitto,{'all','ts'});    
+    fitto = validatestring(fitto,{'all','ts'});
     if strcmpi(fitto,'ts') && isempty(p.Results.trunkstream);
         error('TopoToolbox:wronginput',...
              ['You must supply a trunkstream, if you use the parameter \n'...
@@ -137,7 +137,7 @@ zx   = double(DEM.Z(S.IXgrid));
 % elevation at outlet
 zb   = double(DEM.Z(S.IXgrid(outlet)));
 
-% a is the term inside the brackets of equation 6b 
+% a is the term inside the brackets of equation 6b
 a    = double(a0./(A.Z(S.IXgrid)*(A.cellsize.^2)));
 
 % x is the cumulative horizontal distance in upstream direction
@@ -161,9 +161,10 @@ end
 
 % find values of the ratio of m and n that generate a linear Chi plot
 % uses fminsearch
+option = optimset('MaxFunEvals',10000);
 if isempty( p.Results.mn );
     mn0  = 0.5; % initial value
-    mn   = fminsearch(@mnfit,mn0);
+    mn   = fminsearch(@mnfit,mn0,option);
 else
     % or use predefined mn ratio.
     mn   = p.Results.mn;
@@ -175,7 +176,7 @@ if p.Results.mnplot
     cvec = jet(numel(mntest));
     figure('DefaultAxesColorOrder',cvec);
     chitest = zeros(numel(Lib),numel(mntest));
-    
+
     for r = 1:numel(mntest);
         chitest(:,r) = netcumtrapz(x(Lib),a(Lib).^mntest(r),SFIT.ix,SFIT.ixc);
     end
@@ -196,7 +197,7 @@ switch betamethod
         beta = chi(Lib)\(zx(Lib)-zb);
     case 'lad'
         % least absolute deviations
-        beta = fminsearch(@(b) sum(abs(b*chi(Lib) - (zx(Lib)-zb))),0.0334);
+        beta = fminsearch(@(b) sum(abs(b*chi(Lib) - (zx(Lib)-zb))), 0.0334, option);
 end
 
 n    = nnz(Lib);
@@ -216,7 +217,7 @@ if p.Results.plot;
     c(I)  = chi(order(I));
     zz    = nan(size(order));
     zz(I) = zx(order(I))-zb;
-    
+
     plot(c,zz,'-','color',[.5 .5 .5]);
     hold on
 
@@ -224,10 +225,10 @@ if p.Results.plot;
         switch p.Results.fitto
             case 'all'
                 % check trunkstream
-        
+
                 ST    = p.Results.trunkstream;
                 [Lia,Lib] = ismember(ST.IXgrid,S.IXgrid);
-        
+
                 if any(~Lia);
                     error('TopoToolbox:chiplot',...
                         ['The main trunk stream must be a subset of the stream network.\n'...
@@ -237,8 +238,8 @@ if p.Results.plot;
             case 'ts'
                  ST = SFIT;
         end
-        
-        order = ST.orderednanlist; 
+
+        order = ST.orderednanlist;
         I     = ~isnan(order);
         c     = nan(size(order));
         chifit = chi(Lib);
@@ -249,7 +250,7 @@ if p.Results.plot;
 
         plot(c,zz,'k-','LineWidth',2);
     end
-    
+
     refline(beta,0);
     hold off
     xlabel('\chi [m]')
@@ -258,14 +259,14 @@ end
 
 % write to output array
 if nargout == 1;
-    
+
     OUT.mn   = mn;
     OUT.beta = beta;
     OUT.betase = betase;
     OUT.a0   = a0;
     OUT.ks   = beta*a0^mn;
     OUT.R2   = R2;
-    
+
     [OUT.x,...
      OUT.y,...
      OUT.chi,...
@@ -277,7 +278,7 @@ if nargout == 1;
      OUT.res   = OUT.elevbl-OUT.pred;
 
 end
-    
+
 
 
 %% fitting function
@@ -311,7 +312,3 @@ for lp = numel(ix):-1:1;
     z(ix(lp)) = z(ixc(lp)) + (y(ixc(lp))+(y(ix(lp))-y(ixc(lp)))/2) *(abs(x(ixc(lp))-x(ix(lp))));
 end
 end
-
-
-
-
